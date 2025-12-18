@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organograma da Empresa</title>
+    <title>Organograma Bloomy</title>
     <!-- Fonte e Ícones -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -72,6 +72,15 @@
             transition: 0.2s; display: flex; align-items: center; gap: 6px; text-decoration: none;
         }
         .btn-secondary:hover { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+        
+        /* Botão Desfazer */
+        .btn-undo {
+            background: #fff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-undo:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+        .btn-undo:disabled { opacity: 0.5; cursor: not-allowed; background: #f8f9fa; }
 
         .btn-reset {
             background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px 16px;
@@ -88,9 +97,8 @@
             overflow: auto;
             padding: 50px;
             text-align: center;
-            /* Alteração crucial: remove flex center para evitar corte à esquerda */
             display: block; 
-            white-space: nowrap; /* Garante que o conteúdo não quebre */
+            white-space: nowrap;
             background-image: radial-gradient(#dee2e6 1px, transparent 1px);
             background-size: 20px 20px;
             cursor: grab;
@@ -102,7 +110,7 @@
             text-align: center;
             margin-top: 100px;
             animation: fadeIn 0.5s;
-            display: inline-block; /* Centraliza no novo layout block */
+            display: inline-block;
             width: 100%;
         }
         .empty-circle {
@@ -121,12 +129,12 @@
 
         /* --- ÁRVORE (LINHAS) --- */
         .tree {
-            display: inline-block; /* Permite que o container calcule a largura total */
+            display: inline-block;
             transform-origin: top center;
             transition: transform 0.2s ease-out;
             padding-bottom: 100px;
-            min-width: 100%; /* Garante que ocupe pelo menos a tela */
-            text-align: center; /* Centraliza os filhos */
+            min-width: 100%;
+            text-align: center;
         }
 
         .tree ul {
@@ -139,13 +147,12 @@
             position: relative; padding: 20px 10px 0 10px;
         }
         
-        /* Linhas conectoras - BASE (A cor será sobrescrita via style inline) */
+        /* Linhas conectoras */
         .tree li::before, .tree li::after {
             content: ''; position: absolute; top: 0; right: 50%;
-            border-top: 4px solid #cbd5e1; /* Largura ajustada para 4px */
-            width: 50%; height: 20px;
+            border-top: 4px solid #cbd5e1; width: 50%; height: 20px;
         }
-        .tree li::after { right: auto; left: 50%; border-left: 4px solid #cbd5e1; /* Largura ajustada para 4px */ }
+        .tree li::after { right: auto; left: 50%; border-left: 4px solid #cbd5e1; }
         
         .tree li:only-child::after, .tree li:only-child::before { display: none; }
         .tree li:only-child { padding-top: 0; }
@@ -155,32 +162,20 @@
         
         .tree ul ul::before {
             content: ''; position: absolute; top: 0; left: 50%;
-            border-left: 4px solid #cbd5e1; /* Largura ajustada para 4px */
-            width: 0; height: 20px;
+            border-left: 4px solid #cbd5e1; width: 0; height: 20px;
         }
 
         /* Classes para colorir linhas via JavaScript */
-        
-        /* Roxo */
         .line-roxo::before, .line-roxo::after { border-color: #8b5cf6 !important; }
         .vertical-roxo::before { border-left-color: #8b5cf6 !important; }
-
-        /* Laranja */
         .line-laranja::before, .line-laranja::after { border-color: #ea580c !important; }
         .vertical-laranja::before { border-left-color: #ea580c !important; }
-
-        /* Verde */
         .line-verde::before, .line-verde::after { border-color: #10b981 !important; }
         .vertical-verde::before { border-left-color: #10b981 !important; }
-
-        /* Azul */
         .line-azul::before, .line-azul::after { border-color: #3b82f6 !important; }
         .vertical-azul::before { border-left-color: #3b82f6 !important; }
-
-        /* Amarelo */
         .line-amarelo::before, .line-amarelo::after { border-color: #d97706 !important; }
         .vertical-amarelo::before { border-left-color: #d97706 !important; }
-
 
         /* --- CARTÃO (CARD) --- */
         .card {
@@ -196,59 +191,34 @@
             transition: 0.2s;
             margin: 0 auto;
             padding: 0; 
-            cursor: pointer; /* Indica clicável */
-            white-space: normal; /* Permite que o texto dentro do card quebre linha */
+            cursor: pointer;
+            white-space: normal;
         }
         
-        /* Estilo visual quando arrastando */
-        .card.dragging {
-            opacity: 0.5;
-            border: 2px dashed #3b82f6;
-        }
-
-        /* Estilo visual para área de drop válida */
-        .card.drag-over {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            border: 2px solid #3b82f6;
-        }
-        
+        .card.dragging { opacity: 0.5; border: 2px dashed #3b82f6; }
+        .card.drag-over { transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); border: 2px solid #3b82f6; }
         .card:hover { transform: translateY(-3px); }
         .card:hover .card-actions { opacity: 1; visibility: visible; }
         
         .card-photo {
-            width: 100%;
-            height: 110px;
-            background-color: #f1f5f9;
-            position: relative; 
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            overflow: hidden; 
+            width: 100%; height: 110px; background-color: #f1f5f9; position: relative; 
+            border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden; 
         }
         
-        .card-photo img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-        }
+        .card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .card-info {
-            padding: 10px 15px;
-            text-align: center;
-            background: white;
-            flex-grow: 1; 
+            padding: 10px 15px; text-align: center; background: white; flex-grow: 1; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
         }
 
         .card h3 { font-size: 14px; color: #1e293b; font-weight: 700; margin-bottom: 2px; line-height: 1.2; }
         .card p { font-size: 11px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Botões de Ação (Topo Direita) */
         .card-actions {
-            position: absolute; top: 10px; right: 10px;
-            display: flex; gap: 5px;
-            opacity: 0; visibility: hidden; transition: 0.2s;
-            z-index: 50;
+            position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;
+            opacity: 0; visibility: hidden; transition: 0.2s; z-index: 50;
         }
         @media (hover: none), (max-width: 768px) { .card-actions { opacity: 1; visibility: visible; } }
 
@@ -263,30 +233,14 @@
         .btn-edit { background: rgba(59, 130, 246, 0.95); }
         .btn-del { background: rgba(239, 68, 68, 0.95); }
 
-        /* Botão de Expandir/Recolher (Fundo do Card) */
         .btn-toggle-collapse {
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 24px; height: 24px;
-            background: #fff;
-            border: 2px solid #cbd5e1;
-            color: #64748b;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px;
-            cursor: pointer;
-            z-index: 20;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: 0.2s;
+            position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+            width: 24px; height: 24px; background: #fff; border: 2px solid #cbd5e1;
+            color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 10px; cursor: pointer; z-index: 20;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        .btn-toggle-collapse:hover {
-            background: #f1f5f9;
-            color: #333;
-            border-color: #94a3b8;
-            transform: translateX(-50%) scale(1.1);
-        }
+        .btn-toggle-collapse:hover { background: #f1f5f9; color: #333; border-color: #94a3b8; transform: translateX(-50%) scale(1.1); }
 
         /* --- MODAL E TOAST --- */
         .toast {
@@ -342,6 +296,9 @@
                 <button class="btn-zoom" onclick="alterarZoom(0.1)" title="Aumentar Zoom"><i class="fa-solid fa-plus"></i></button>
             </div>
             <div class="toolbar-actions">
+                <button class="btn-undo" id="btn-undo" onclick="desfazer()" title="Desfazer (Ctrl+Z)" disabled>
+                    <i class="fa-solid fa-rotate-left"></i> Desfazer
+                </button>
                 <button class="btn-secondary" onclick="exportarDados()" title="Backup"><i class="fa-solid fa-download"></i> Backup</button>
                 <label for="import-file" class="btn-secondary" title="Restaurar"><i class="fa-solid fa-upload"></i> Restaurar</label>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarDados(this)">
@@ -611,9 +568,52 @@
     let isEditing = false;
     let saveTimeout;
     let currentScale = 1;
-    
-    // Variáveis para Drag and Drop
     let draggedNodeId = null;
+    
+    // --- SISTEMA DE HISTÓRICO (UNDO) ---
+    const historyStack = [];
+    const MAX_HISTORY = 20; // Limite de ações para desfazer
+
+    function saveToHistory() {
+        // Guarda uma cópia profunda (Deep Copy) do estado atual
+        const currentState = JSON.stringify(treeData);
+        
+        // Se a pilha estiver cheia, remove o mais antigo
+        if (historyStack.length >= MAX_HISTORY) {
+            historyStack.shift();
+        }
+        
+        // Adiciona ao topo da pilha
+        historyStack.push(currentState);
+        
+        // Ativa o botão de desfazer
+        document.getElementById('btn-undo').disabled = false;
+    }
+
+    function desfazer() {
+        if (historyStack.length === 0) return;
+
+        const previousState = historyStack.pop();
+        treeData = JSON.parse(previousState);
+        
+        // Salva no localStorage (sem adicionar ao histórico de novo)
+        localStorage.setItem('organogramaData', JSON.stringify(treeData));
+        render();
+        mostrarToastSalvo("Ação desfeita");
+
+        // Se a pilha ficar vazia, desativa o botão
+        if (historyStack.length === 0) {
+            document.getElementById('btn-undo').disabled = true;
+        }
+    }
+
+    // Atalho de Teclado (Ctrl+Z ou Cmd+Z)
+    document.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+            event.preventDefault(); // Impede o browser de desfazer texto em inputs
+            desfazer();
+        }
+    });
 
     // --- HELPERS ---
     function formatarUrlImagem(url) {
@@ -638,28 +638,23 @@
         const zoomDisplay = document.getElementById('zoom-display');
         if (treeElement) treeElement.style.transform = `scale(${currentScale})`;
         if (zoomDisplay) zoomDisplay.innerText = `${Math.round(currentScale * 100)}%`;
-        
-        // Ajuste para scroll horizontal
         centralizarOuResetarScroll();
     }
     
     function centralizarOuResetarScroll() {
-        // Nada complexo aqui, apenas garantindo que o scroll apareça se necessário
         const container = document.getElementById('org-container');
-        // Se o zoom mudar, o scrollHeight/scrollWidth muda, o navegador ajusta.
     }
 
     // --- TOGGLE (EXPANDIR/RECOLHER) ---
     function alternarExibicao(event, id) {
         if (event) event.stopPropagation();
-        
-        // Verifica se clicou num botão de ação (add/edit/del) para não disparar o toggle
         if (event.target.closest('.action-btn')) return;
 
         const node = findNode(id);
         if (node && node.children && node.children.length > 0) {
+            saveToHistory(); // Guarda estado antes de alterar
             node.collapsed = !node.collapsed;
-            saveData(); // Salva estado de colapso
+            saveData(false); // Salva sem adicionar ao histórico (já adicionou)
         }
     }
 
@@ -685,8 +680,6 @@
             treeRoot.appendChild(ul);
             container.appendChild(treeRoot);
             
-            // Garantir que a árvore tenha largura suficiente para scroll
-            // Centralização inicial via JS se necessário
             setTimeout(() => {
                 aplicarZoom();
             }, 0);
@@ -699,18 +692,11 @@
         const foto = rawFoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${node.id}&backgroundColor=e2e8f0`;
         const isRoot = node.id === treeData.id;
         const hasChildren = node.children && node.children.length > 0;
-        const isCollapsed = node.collapsed === true; // Default false
-
-        // Ícone do botão de toggle (+ ou -)
+        const isCollapsed = node.collapsed === true;
         const toggleIcon = isCollapsed ? 'fa-plus' : 'fa-minus';
-
-        // Extrai a cor base para aplicar na linha (ex: "cor-roxo" -> "line-roxo")
         const corLinha = node.cor ? node.cor.replace('cor-', 'line-') : '';
 
         let html = `<li class="${corLinha}">`;
-        
-        // Adicionamos atributos para Drag and Drop
-        // draggable="true" apenas se NÃO for o root
         const draggableAttr = !isRoot ? 'draggable="true"' : '';
         
         html += `
@@ -742,7 +728,6 @@
             </div>
         `;
 
-        // Renderiza filhos APENAS se não estiver colapsado
         if (hasChildren && !isCollapsed) {
             html += '<ul>';
             node.children.forEach(child => {
@@ -755,21 +740,17 @@
         return html;
     }
 
-    // --- FUNÇÕES DE DRAG AND DROP ---
-
+    // --- DRAG AND DROP ---
     function dragStart(event, id) {
         event.stopPropagation();
         draggedNodeId = id;
         event.dataTransfer.effectAllowed = 'move';
-        // Adiciona classe visual
         event.target.closest('.card').classList.add('dragging');
     }
 
     function dragOver(event) {
-        event.preventDefault(); // Necessário para permitir o drop
+        event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
-        
-        // Adiciona feedback visual no alvo
         const card = event.target.closest('.card');
         if (card && !card.classList.contains('dragging')) {
             card.classList.add('drag-over');
@@ -778,15 +759,12 @@
 
     function dragLeave(event) {
         const card = event.target.closest('.card');
-        if (card) {
-            card.classList.remove('drag-over');
-        }
+        if (card) card.classList.remove('drag-over');
     }
 
     function drop(event, targetId) {
         event.preventDefault();
         event.stopPropagation();
-
         const card = event.target.closest('.card');
         if (card) {
             card.classList.remove('drag-over');
@@ -795,16 +773,11 @@
         }
 
         if (!draggedNodeId || draggedNodeId === targetId) return;
-
-        // Lógica de Movimentação ou Reordenação
         moverOuReordenarNo(draggedNodeId, targetId);
-        
-        // Reset
         draggedNodeId = null;
     }
 
     function moverOuReordenarNo(idParaMover, idAlvo) {
-        // Encontrar os nós
         const noMovido = findNode(idParaMover);
         const paiAtual = findParent(idParaMover);
         const noAlvo = findNode(idAlvo);
@@ -815,55 +788,43 @@
             return;
         }
 
-        // Caso 1: Reordenação (Mesmo pai)
-        // Se o alvo é irmão do nó movido (tem o mesmo pai), trocamos a ordem
         if (paiAtual.id === paiAlvo?.id) {
             const indexMovido = paiAtual.children.findIndex(c => c.id === idParaMover);
             const indexAlvo = paiAtual.children.findIndex(c => c.id === idAlvo);
             
             if (indexMovido > -1 && indexAlvo > -1) {
-                // Remove o item da posição antiga
+                saveToHistory(); // Guarda estado antes
                 paiAtual.children.splice(indexMovido, 1);
-                // Insere na nova posição (antes do alvo)
                 paiAtual.children.splice(indexAlvo, 0, noMovido);
-                saveData();
+                saveData(false);
                 return;
             }
         }
 
-        // Caso 2: Mover para outro chefe (Hierarquia)
-        // Verifica ciclos
         if (verificarDescendencia(idParaMover, idAlvo)) {
             alert("Não é possível mover um chefe para dentro da sua própria equipe.");
             return;
         }
 
-        // Remove do pai antigo
+        saveToHistory(); // Guarda estado antes
         paiAtual.children = paiAtual.children.filter(child => String(child.id) !== String(idParaMover));
-        
-        // Adiciona ao novo pai (no final da lista)
         if (!noAlvo.children) noAlvo.children = [];
         noAlvo.children.push(noMovido);
         noAlvo.collapsed = false;
-
-        saveData();
+        saveData(false);
     }
 
-    // Verifica se o 'supostoFilho' é na verdade um descendente do 'supostoPai' (evita loops)
     function verificarDescendencia(idSupostoPai, idSupostoFilho) {
         if (String(idSupostoPai) === String(idSupostoFilho)) return true;
-        
         const pai = findNode(idSupostoPai);
         if (!pai || !pai.children) return false;
-
-        // Busca recursiva nos filhos do suposto pai para ver se encontra o alvo
         for (let filho of pai.children) {
-            if (verificarDescendencia(filho.id, idSupostoFilho)) return true; // Se encontrou recursivamente
+            if (verificarDescendencia(filho.id, idSupostoFilho)) return true;
         }
         return false;
     }
 
-    // --- LÓGICA DE DADOS ---
+    // --- DADOS ---
     function generateId() { return '_' + Math.random().toString(36).substr(2, 9); }
 
     function findNode(id, node = treeData) {
@@ -888,16 +849,24 @@
         return null;
     }
 
-    function saveData() {
+    // Atualizado para suportar histórico
+    function saveData(addToHistory = true) {
+        if (addToHistory) saveToHistory();
+        
         localStorage.setItem('organogramaData', JSON.stringify(treeData));
-        const toast = document.getElementById('save-toast');
-        toast.classList.add('show');
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => toast.classList.remove('show'), 2000);
+        mostrarToastSalvo();
         render();
     }
     
-    function usarPadrao() { treeData = dadosPadrao; saveData(); }
+    function mostrarToastSalvo(msg = "Guardado automaticamente") {
+        const toast = document.getElementById('save-toast');
+        toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${msg}`;
+        toast.classList.add('show');
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    function usarPadrao() { saveToHistory(); treeData = dadosPadrao; saveData(false); }
 
     function exportarDados() {
         if (!treeData) return alert("Não há dados.");
@@ -916,7 +885,8 @@
                 const json = JSON.parse(e.target.result);
                 if (!json.nome && !json.id) throw new Error("Estrutura inválida.");
                 if (confirm("Isto substituirá o organograma atual. Continuar?")) {
-                    treeData = json; saveData(); alert("Restaurado com sucesso!");
+                    saveToHistory();
+                    treeData = json; saveData(false); alert("Restaurado com sucesso!");
                 }
             } catch (err) { alert("Erro ao restaurar: " + err.message); } 
             finally { input.value = ''; }
@@ -926,7 +896,7 @@
 
     // --- MODAL ---
     function abrirModal(event, id, editing) {
-        if (event) event.stopPropagation(); // Impede toggle ao clicar em editar
+        if (event) event.stopPropagation();
         currentNodeId = id; isEditing = editing;
         const modal = document.getElementById('modal');
         const title = document.getElementById('modal-title');
@@ -956,6 +926,9 @@
         const foto = document.getElementById('input-foto').value;
         const cor = document.getElementById('input-cor').value;
 
+        // Guarda estado antes da alteração
+        saveToHistory();
+
         if (isEditing) {
             const node = findNode(currentNodeId);
             if (node) { node.nome = nome; node.cargo = cargo; node.foto = foto; node.cor = cor; }
@@ -966,37 +939,49 @@
                 const node = findNode(currentNodeId || treeData.id);
                 if (node) { 
                     node.children.push(newNode); 
-                    node.collapsed = false; // Abre automaticamente ao adicionar filho
+                    node.collapsed = false;
                 }
             }
         }
-        saveData(); fecharModal();
+        saveData(false); // Já salvamos no histórico acima
+        fecharModal();
     };
 
     function removerNo(event, id) {
         if (event) event.stopPropagation();
         if (!treeData) return;
         if (String(treeData.id) === String(id)) {
-            if (confirm("Apagar TUDO?")) { treeData = null; saveData(); } return;
+            if (confirm("Apagar TUDO?")) { 
+                saveToHistory();
+                treeData = null; 
+                saveData(false); 
+            } 
+            return;
         }
         if (!confirm("Remover esta pessoa e equipa?")) return;
+        
+        saveToHistory();
         const parent = findParent(id);
         if (parent) {
             parent.children = parent.children.filter(child => String(child.id) !== String(id));
-            saveData();
+            saveData(false);
         }
     }
 
-    function resetarTudo() { if (confirm("Apagar tudo?")) { treeData = null; saveData(); } }
+    function resetarTudo() { 
+        if (confirm("Apagar tudo?")) { 
+            saveToHistory();
+            treeData = null; 
+            saveData(false); 
+        } 
+    }
 
     // Scroll Dragging
     const container = document.getElementById('org-container');
     let isDown = false; let startX, startY; let scrollLeft, scrollTop;
     
     container.addEventListener('mousedown', (e) => {
-        // Se clicar num botão de ação OU num card (para drag n drop), não inicia scroll drag
         if (e.target.closest('.action-btn') || e.target.closest('.card')) return;
-        
         isDown = true; startX = e.pageX - container.offsetLeft; startY = e.pageY - container.offsetTop;
         scrollLeft = container.scrollLeft; scrollTop = container.scrollTop;
         container.style.cursor = 'grabbing';
