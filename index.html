@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organograma Bloomy</title>
+    <!-- Fonte e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- RESET E BASE --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: #f8f9fa;
+            background-image: radial-gradient(#dee2e6 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden; 
+        }
+
+        /* --- BARRA DE FERRAMENTAS --- */
+        .toolbar {
+            width: 100%;
+            background: #fff;
+            padding: 10px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            height: 70px;
+        }
+        .toolbar h1 { font-size: 18px; color: #333; display: flex; align-items: center; gap: 10px; }
+        
+        .toolbar-group { display: flex; align-items: center; gap: 15px; }
+
+        /* Controles de Zoom */
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+            gap: 8px;
+        }
+        .btn-zoom {
+            width: 30px; height: 30px;
+            border: none; background: white;
+            border-radius: 6px; cursor: pointer;
+            color: #475569; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        .btn-zoom:hover { background: #e2e8f0; color: #1e293b; }
+        .zoom-level {
+            font-size: 12px; font-weight: 600; color: #475569; min-width: 45px; text-align: center;
+        }
+
+        /* Botões de Ação */
+        .toolbar-actions { display: flex; gap: 10px; align-items: center; }
+
+        .btn-secondary {
+            background: #fff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px; text-decoration: none;
+        }
+        .btn-secondary:hover { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+
+        .btn-reset {
+            background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-reset:hover { background: #fecaca; }
+
+        /* --- CONTAINER DO ORGANOGRAMA --- */
+        .org-container {
+            margin-top: 70px;
+            width: 100%;
+            height: calc(100vh - 70px);
+            overflow: auto;
+            padding: 50px;
+            text-align: center;
+            /* Alteração crucial: remove flex center para evitar corte à esquerda */
+            display: block; 
+            white-space: nowrap; /* Garante que o conteúdo não quebre */
+            background-image: radial-gradient(#dee2e6 1px, transparent 1px);
+            background-size: 20px 20px;
+            cursor: grab;
+        }
+        .org-container:active { cursor: grabbing; }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            text-align: center;
+            margin-top: 100px;
+            animation: fadeIn 0.5s;
+            display: inline-block; /* Centraliza no novo layout block */
+            width: 100%;
+        }
+        .empty-circle {
+            width: 80px; height: 80px; background: #e2e8f0; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; color: #94a3b8; font-size: 30px;
+            border: 2px dashed #cbd5e1;
+        }
+        .btn-start {
+            background: #3b82f6; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+            transition: 0.2s;
+        }
+        .btn-start:hover { background: #2563eb; transform: translateY(-2px); }
+
+        /* --- ÁRVORE (LINHAS) --- */
+        .tree {
+            display: inline-block; /* Permite que o container calcule a largura total */
+            transform-origin: top center;
+            transition: transform 0.2s ease-out;
+            padding-bottom: 100px;
+            min-width: 100%; /* Garante que ocupe pelo menos a tela */
+            text-align: center; /* Centraliza os filhos */
+        }
+
+        .tree ul {
+            padding-top: 20px; position: relative;
+            display: flex; 
+            justify-content: center;
+        }
+        .tree li {
+            text-align: center; list-style-type: none;
+            position: relative; padding: 20px 10px 0 10px;
+        }
+        
+        /* Linhas conectoras - BASE (A cor será sobrescrita via style inline) */
+        .tree li::before, .tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 4px solid #cbd5e1; /* Largura ajustada para 4px */
+            width: 50%; height: 20px;
+        }
+        .tree li::after { right: auto; left: 50%; border-left: 4px solid #cbd5e1; /* Largura ajustada para 4px */ }
+        
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before { border-right: 4px solid #cbd5e1; border-radius: 0 5px 0 0; }
+        .tree li:first-child::after { border-radius: 5px 0 0 0; }
+        
+        .tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 4px solid #cbd5e1; /* Largura ajustada para 4px */
+            width: 0; height: 20px;
+        }
+
+        /* Classes para colorir linhas via JavaScript */
+        
+        /* Roxo */
+        .line-roxo::before, .line-roxo::after { border-color: #8b5cf6 !important; }
+        .vertical-roxo::before { border-left-color: #8b5cf6 !important; }
+
+        /* Laranja */
+        .line-laranja::before, .line-laranja::after { border-color: #ea580c !important; }
+        .vertical-laranja::before { border-left-color: #ea580c !important; }
+
+        /* Verde */
+        .line-verde::before, .line-verde::after { border-color: #10b981 !important; }
+        .vertical-verde::before { border-left-color: #10b981 !important; }
+
+        /* Azul */
+        .line-azul::before, .line-azul::after { border-color: #3b82f6 !important; }
+        .vertical-azul::before { border-left-color: #3b82f6 !important; }
+
+        /* Amarelo */
+        .line-amarelo::before, .line-amarelo::after { border-color: #d97706 !important; }
+        .vertical-amarelo::before { border-left-color: #d97706 !important; }
+
+
+        /* --- CARTÃO (CARD) --- */
+        .card {
+            background: #fff;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px;
+            box-shadow: 0 83px 23px 0 rgba(43, 35, 91, 0.00), 0 53px 21px 0 rgba(43, 35, 91, 0.01), 0 30px 18px 0 rgba(43, 35, 91, 0.05), 0 13px 13px 0 rgba(43, 35, 91, 0.09), 0 3px 7px 0 rgba(43, 35, 91, 0.10);
+            position: relative; 
+            z-index: 2;
+            transition: 0.2s;
+            margin: 0 auto;
+            padding: 0; 
+            cursor: pointer; /* Indica clicável */
+            white-space: normal; /* Permite que o texto dentro do card quebre linha */
+        }
+        
+        .card:hover { transform: translateY(-3px); }
+        .card:hover .card-actions { opacity: 1; visibility: visible; }
+        
+        .card-photo {
+            width: 100%;
+            height: 110px;
+            background-color: #f1f5f9;
+            position: relative; 
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            overflow: hidden; 
+        }
+        
+        .card-photo img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+
+        .card-info {
+            padding: 10px 15px;
+            text-align: center;
+            background: white;
+            flex-grow: 1; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .card h3 { font-size: 14px; color: #1e293b; font-weight: 700; margin-bottom: 2px; line-height: 1.2; }
+        .card p { font-size: 11px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Botões de Ação (Topo Direita) */
+        .card-actions {
+            position: absolute; top: 10px; right: 10px;
+            display: flex; gap: 5px;
+            opacity: 0; visibility: hidden; transition: 0.2s;
+            z-index: 50;
+        }
+        @media (hover: none), (max-width: 768px) { .card-actions { opacity: 1; visibility: visible; } }
+
+        .action-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            color: white; font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative; z-index: 100;
+        }
+        .btn-add { background: rgba(16, 185, 129, 0.95); }
+        .btn-edit { background: rgba(59, 130, 246, 0.95); }
+        .btn-del { background: rgba(239, 68, 68, 0.95); }
+
+        /* Botão de Expandir/Recolher (Fundo do Card) */
+        .btn-toggle-collapse {
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px; height: 24px;
+            background: #fff;
+            border: 2px solid #cbd5e1;
+            color: #64748b;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            z-index: 20;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+        .btn-toggle-collapse:hover {
+            background: #f1f5f9;
+            color: #333;
+            border-color: #94a3b8;
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* --- MODAL E TOAST --- */
+        .toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #10b981; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 12px; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 8px;
+            opacity: 0; transform: translateY(10px); transition: 0.3s;
+            z-index: 2000; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal {
+            background: white; padding: 25px; border-radius: 16px;
+            width: 320px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            animation: slideUp 0.3s;
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 15px; color: #1e293b; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .form-group input:focus { border-color: #3b82f6; ring: 2px solid #bfdbfe; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { flex: 1; background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-cancel { flex: 1; background: #f1f5f9; color: #475569; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* Cores */
+        .cor-roxo h3 { color: #7c3aed; }
+        .cor-laranja h3 { color: #ea580c; }
+        .cor-verde h3 { color: #059669; }
+        .cor-azul h3 { color: #2563eb; }
+        .cor-amarelo h3 { color: #d97706; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <h1>🌳 Organograma Bloomy</h1>
+        <div class="toolbar-group">
+            <div class="zoom-controls">
+                <button class="btn-zoom" onclick="alterarZoom(-0.1)" title="Diminuir Zoom"><i class="fa-solid fa-minus"></i></button>
+                <span class="zoom-level" id="zoom-display">100%</span>
+                <button class="btn-zoom" onclick="alterarZoom(0.1)" title="Aumentar Zoom"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn-secondary" onclick="exportarDados()" title="Backup"><i class="fa-solid fa-download"></i> Backup</button>
+                <label for="import-file" class="btn-secondary" title="Restaurar"><i class="fa-solid fa-upload"></i> Restaurar</label>
+                <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarDados(this)">
+                <button class="btn-reset" onclick="resetarTudo()" title="Limpar"><i class="fa-solid fa-trash"></i> Limpar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="org-container" id="org-container"></div>
+
+    <!-- Toast -->
+    <div id="save-toast" class="toast"><i class="fa-solid fa-check-circle"></i> Guardado automaticamente</div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2 id="modal-title">Adicionar Pessoa</h2>
+            <form id="node-form">
+                <div class="form-group"><label>Nome</label><input type="text" id="input-nome" placeholder="Ex: Ana Silva" required></div>
+                <div class="form-group"><label>Cargo</label><input type="text" id="input-cargo" placeholder="Ex: Gerente" required></div>
+                <div class="form-group"><label>URL da Foto (opcional)</label><input type="text" id="input-foto" placeholder="https://..."><small style="color:#94a3b8; font-size:10px;">Suporta link direto ou Google Drive</small></div>
+                <div class="form-group">
+                    <label>Cor do Departamento</label>
+                    <select id="input-cor">
+                        <option value="cor-roxo">Roxo (Diretoria)</option>
+                        <option value="cor-laranja">Laranja (Financeiro/Mkt)</option>
+                        <option value="cor-verde">Verde (Operações/Saúde)</option>
+                        <option value="cor-azul">Azul (Administrativo)</option>
+                        <option value="cor-amarelo">Amarelo (Coordenação)</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // --- DADOS INICIAIS ---
+    const dadosPadrao = {
+  "id": "_6o224oilt",
+  "nome": "Dr. Marcus Vinicius",
+  "cargo": "CEO",
+  "foto": "https://drive.google.com/file/d/1DRmB13vd6QPw4OhVd07MY0AOqn4iPGnv/view?usp=drive_link",
+  "cor": "cor-azul",
+  "children": [
+    {
+      "id": "_5bzjjoiyv",
+      "nome": "Rafael Morgado",
+      "cargo": "CFO",
+      "foto": "https://drive.google.com/file/d/1W3HJ2xyogRz0JBTmCZxNGdKH6ha9t89d/view?usp=drive_link",
+      "cor": "cor-roxo",
+      "children": [
+        {
+          "id": "_uepyyt18y",
+          "nome": "Bruno Santos",
+          "cargo": "Design Lead",
+          "foto": "https://drive.google.com/file/d/1CfI-wKP8BBptgPUOxikEirVmXSupuueR/view?usp=drive_link",
+          "cor": "cor-laranja",
+          "children": [
+            {
+              "id": "_kzt02hpm3",
+              "nome": "Marcos Castilho",
+              "cargo": "Designer",
+              "foto": "https://drive.google.com/file/d/1RyCrHPj6Gk4QY2wC7nXeanZtHCrkBSJ1/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [],
+              "collapsed": false
+            },
+            {
+              "id": "_k3clswk6f",
+              "nome": "Vinicius Cunha",
+              "cargo": "Designer",
+              "foto": "https://drive.google.com/file/d/1-MYimseYIKWO5yLPsF2jU0tyvBa5zCdj/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [],
+              "collapsed": false
+            },
+            {
+              "id": "_z0d3abw8r",
+              "nome": "Nícolas de Queiróz",
+              "cargo": "Web Designer",
+              "foto": "https://drive.google.com/file/d/1lwXYjZ4SbugXWvBehXbihY33w6rhVb-C/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [],
+              "collapsed": false
+            },
+            {
+              "id": "_0jtvh7ir7",
+              "nome": "Lucas Santi",
+              "cargo": "Motion Designer",
+              "foto": "https://drive.google.com/file/d/1kOP49hSyc1XIeRtasu5ZJNFLme7aqrJu/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [],
+              "collapsed": false
+            }
+          ],
+          "collapsed": false
+        },
+        {
+          "id": "_vsba41vcb",
+          "nome": "Andressa Giro",
+          "cargo": "Marketing",
+          "foto": "https://drive.google.com/file/d/1ebJljRu95MMlrxJHzTA3r9ykGEylh0DB/view?usp=drive_link",
+          "cor": "cor-laranja",
+          "children": []
+        },
+        {
+          "id": "_gojba4c9d",
+          "nome": "Rodrigo Kubo",
+          "cargo": "Administrativo",
+          "foto": "https://drive.google.com/file/d/1ltAQj1AcO6N6B-TkBt3G6NgGUhsXx6V0/view?usp=drive_link",
+          "cor": "cor-laranja",
+          "children": []
+        },
+        {
+          "id": "_sep6ksv0h",
+          "nome": "Gisele Gama",
+          "cargo": "People",
+          "foto": "https://drive.google.com/file/d/16BhBR7QgTtc8X0t9-QCPRyiQJoZz9_wB/view?usp=drive_link",
+          "cor": "cor-laranja",
+          "children": [
+            {
+              "id": "_94zg9wdor",
+              "nome": "Juliana Cintra",
+              "cargo": "People",
+              "foto": "https://drive.google.com/file/d/1nDP9_naTLx_7bqs8nd-xPDYEZx-UrSCu/view?usp=drive_link",
+              "cor": "cor-roxo",
+              "children": [],
+              "collapsed": false
+            },
+            {
+              "id": "_03ls5ca62",
+              "nome": "Luana Rodrigues",
+              "cargo": "People",
+              "foto": "https://drive.google.com/file/d/1tOEm69QMvwIvWsL8LX_tKwPLyS72_lBN/view?usp=drive_link",
+              "cor": "cor-roxo",
+              "children": [],
+              "collapsed": false
+            },
+            {
+              "id": "_kng1a2mcn",
+              "nome": "Mayara Pinheiro",
+              "cargo": "People",
+              "foto": "https://drive.google.com/file/d/1-YUErJ0aEM3JoSrPV3miAnpYqR0fD9va/view?usp=drive_link",
+              "cor": "cor-roxo",
+              "children": [],
+              "collapsed": false
+            }
+          ],
+          "collapsed": false
+        }
+      ],
+      "collapsed": false
+    },
+    {
+      "id": "_317c90xnn",
+      "nome": "Danilo Fernandes",
+      "cargo": "Operação e Processos",
+      "foto": "https://drive.google.com/file/d/1XDHpzNh--IVSWrsffx1YV3HXgYFX1BHm/view?usp=drive_link",
+      "cor": "cor-roxo",
+      "children": [
+        {
+          "id": "_kihsvrxbs",
+          "nome": "Wilson Niz",
+          "cargo": "Assistencial",
+          "foto": "https://drive.google.com/file/d/18IvEl23D8Q7vXzVuX2i1KQFj4UUGAi4p/view?usp=drive_link",
+          "cor": "cor-verde",
+          "children": [
+            {
+              "id": "_lmaa8xkbm",
+              "nome": "Unidade Tatuapé",
+              "cargo": "São Paulo - Zona Leste",
+              "foto": "https://drive.google.com/file/d/1SFZulVE6rurHTvvk18d85NDYlWU5aWxx/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [
+                {
+                  "id": "_4bfpo61zn",
+                  "nome": "Samantha dos Reis",
+                  "cargo": "Coordenação Administrativa",
+                  "foto": "https://drive.google.com/file/d/1iXT3vGMu8lnEMqoll9g2kaNF42Qk2ihb/view?usp=drive_link",
+                  "cor": "cor-amarelo",
+                  "children": [],
+                  "collapsed": false
+                }
+              ],
+              "collapsed": true
+            },
+            {
+              "id": "_niqsq7bx8",
+              "nome": "Unidade Itu",
+              "cargo": "Itu - São Luiz",
+              "foto": "https://drive.google.com/file/d/1r5XwqjMmk-90USQwaEDL3XqP40ulxHOA/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [
+                {
+                  "id": "_hghoyirvm",
+                  "nome": "Ana Paula Simão",
+                  "cargo": "Coordenação Administrativa",
+                  "foto": "https://drive.google.com/file/d/12Q1FLjYd2f4Q8FOpppw5uj5GCCSYxE67/view?usp=drive_link",
+                  "cor": "cor-amarelo",
+                  "children": [],
+                  "collapsed": false
+                }
+              ],
+              "collapsed": true
+            },
+            {
+              "id": "_tdrwysf88",
+              "nome": "Unidade Salto",
+              "cargo": "Salto - Centro",
+              "foto": "https://drive.google.com/file/d/1e8jPkSOuveglZYMtLaUcY_8BtdwkEyY3/view?usp=drive_link",
+              "cor": "cor-azul",
+              "children": [],
+              "collapsed": false
+            }
+          ],
+          "collapsed": true
+        },
+        {
+          "id": "_uc518zwyi",
+          "nome": "Dalila Fernanda",
+          "cargo": "Operação Clínica",
+          "foto": "https://drive.google.com/file/d/1opWP-xyiHFhPo2mYvdYlgBvV2dlHbXTG/view?usp=drive_link",
+          "cor": "cor-verde",
+          "children": []
+        },
+        {
+          "id": "_qgrkf1sbs",
+          "nome": "Fernando Mota",
+          "cargo": "Comercial",
+          "foto": "https://drive.google.com/file/d/1lj3TaB9odbTAemsKUEq57mgCMDquAZnK/view?usp=drive_link",
+          "cor": "cor-verde",
+          "children": [],
+          "collapsed": false
+        },
+        {
+          "id": "_b8vmfdg2g",
+          "nome": "Leonardo Pitton",
+          "cargo": "Tecnologia e Produto",
+          "foto": "https://drive.google.com/file/d/1J1uPzR7oBUZyNhIchLMhZK8MW5WkU1dg/view?usp=drive_link",
+          "cor": "cor-verde",
+          "children": [],
+          "collapsed": false
+        },
+        {
+          "id": "_0cxfnbpiu",
+          "nome": "Rafael Rosa",
+          "cargo": "Tecnologia",
+          "foto": "https://drive.google.com/file/d/1MLB-tjrjOJR1_LhFLNeKQufiKZfq2TUY/view?usp=drive_link",
+          "cor": "cor-verde",
+          "children": [],
+          "collapsed": false
+        }
+      ],
+      "collapsed": true
+    }
+  ]
+};
+
+    // --- ESTADO E VARIÁVEIS ---
+    let treeData = JSON.parse(localStorage.getItem('organogramaData')) || dadosPadrao;
+    let currentNodeId = null;
+    let isEditing = false;
+    let saveTimeout;
+    let currentScale = 1;
+
+    // --- HELPERS ---
+    function formatarUrlImagem(url) {
+        if (!url) return null;
+        const driveRegex = /drive\.google\.com\/file\/d\/([-a-zA-Z0-9_]+)/;
+        const match = url.match(driveRegex);
+        if (match && match[1]) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        return url;
+    }
+
+    // --- ZOOM ---
+    function alterarZoom(delta) {
+        const newScale = currentScale + delta;
+        if (newScale >= 0.2 && newScale <= 2.0) {
+            currentScale = newScale;
+            aplicarZoom();
+        }
+    }
+
+    function aplicarZoom() {
+        const treeElement = document.getElementById('tree-root');
+        const zoomDisplay = document.getElementById('zoom-display');
+        if (treeElement) treeElement.style.transform = `scale(${currentScale})`;
+        if (zoomDisplay) zoomDisplay.innerText = `${Math.round(currentScale * 100)}%`;
+        
+        // Ajuste para scroll horizontal
+        centralizarOuResetarScroll();
+    }
+    
+    function centralizarOuResetarScroll() {
+        // Nada complexo aqui, apenas garantindo que o scroll apareça se necessário
+        const container = document.getElementById('org-container');
+        // Se o zoom mudar, o scrollHeight/scrollWidth muda, o navegador ajusta.
+    }
+
+    // --- TOGGLE (EXPANDIR/RECOLHER) ---
+    function alternarExibicao(event, id) {
+        if (event) event.stopPropagation();
+        
+        // Verifica se clicou num botão de ação (add/edit/del) para não disparar o toggle
+        if (event.target.closest('.action-btn')) return;
+
+        const node = findNode(id);
+        if (node && node.children && node.children.length > 0) {
+            node.collapsed = !node.collapsed;
+            saveData(); // Salva estado de colapso
+        }
+    }
+
+    // --- RENDERIZAÇÃO ---
+    function render() {
+        const container = document.getElementById('org-container');
+        container.innerHTML = '';
+        if (!treeData) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-circle"><i class="fa-solid fa-users"></i></div>
+                    <h2 style="color:#334155; margin-bottom:10px;">O organograma está vazio</h2>
+                    <p style="color:#64748b; margin-bottom:25px;">Comece a adicionar o líder principal.</p>
+                    <button class="btn-start" onclick="usarPadrao()">Carregar Modelo Padrão</button>
+                    <br><br><button style="color:#3b82f6; background:none; border:none; cursor:pointer;" onclick="abrirModal(null, false)">ou Criar Novo do Zero</button>
+                </div>`;
+        } else {
+            const treeRoot = document.createElement('div');
+            treeRoot.className = 'tree';
+            treeRoot.id = 'tree-root'; 
+            const ul = document.createElement('ul');
+            ul.innerHTML = renderNode(treeData);
+            treeRoot.appendChild(ul);
+            container.appendChild(treeRoot);
+            
+            // Garantir que a árvore tenha largura suficiente para scroll
+            // Centralização inicial via JS se necessário
+            setTimeout(() => {
+                aplicarZoom();
+            }, 0);
+        }
+    }
+
+    function renderNode(node) {
+        let rawFoto = node.foto;
+        if (rawFoto && rawFoto.trim() !== '') rawFoto = formatarUrlImagem(rawFoto);
+        const foto = rawFoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${node.id}&backgroundColor=e2e8f0`;
+        const isRoot = node.id === treeData.id;
+        const hasChildren = node.children && node.children.length > 0;
+        const isCollapsed = node.collapsed === true; // Default false
+
+        // Ícone do botão de toggle (+ ou -)
+        const toggleIcon = isCollapsed ? 'fa-plus' : 'fa-minus';
+
+        // Extrai a cor base para aplicar na linha (ex: "cor-roxo" -> "line-roxo")
+        const corLinha = node.cor ? node.cor.replace('cor-', 'line-') : '';
+
+        let html = `<li class="${corLinha}">`;
+        
+        // Adicionamos onclick no card inteiro para fazer o toggle
+        html += `
+            <div class="card ${node.cor}" onclick="alternarExibicao(event, '${node.id}')">
+                <div class="card-photo">
+                    <div class="card-actions">
+                        <button class="action-btn btn-add" title="Adicionar" onclick="abrirModal(event, '${node.id}', false)"><i class="fa-solid fa-plus"></i></button>
+                        <button class="action-btn btn-edit" title="Editar" onclick="abrirModal(event, '${node.id}', true)"><i class="fa-solid fa-pen"></i></button>
+                        ${!isRoot ? 
+                            `<button class="action-btn btn-del" title="Remover" onclick="removerNo(event, '${node.id}')"><i class="fa-solid fa-trash"></i></button>` : 
+                            `<button class="action-btn btn-del" title="Resetar" onclick="removerNo(event, '${node.id}')"><i class="fa-solid fa-rotate-right"></i></button>`
+                        }
+                    </div>
+                    <img src="${foto}" alt="Avatar" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=Erro'">
+                </div>
+                <div class="card-info">
+                    <h3>${node.nome}</h3>
+                    <p>${node.cargo}</p>
+                </div>
+                
+                ${hasChildren ? `<div class="btn-toggle-collapse"><i class="fa-solid ${toggleIcon}"></i></div>` : ''}
+            </div>
+        `;
+
+        // Renderiza filhos APENAS se não estiver colapsado
+        if (hasChildren && !isCollapsed) {
+            html += '<ul>';
+            node.children.forEach(child => {
+                html += renderNode(child);
+            });
+            html += '</ul>';
+        }
+
+        html += '</li>';
+        return html;
+    }
+
+    // --- LÓGICA DE DADOS ---
+    function generateId() { return '_' + Math.random().toString(36).substr(2, 9); }
+
+    function findNode(id, node = treeData) {
+        if (!node) return null;
+        if (String(node.id) === String(id)) return node; 
+        if (node.children) {
+            for (let child of node.children) {
+                const found = findNode(id, child);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    function findParent(id, node = treeData) {
+        if (!node || !node.children) return null;
+        for (let child of node.children) {
+            if (String(child.id) === String(id)) return node;
+            const found = findParent(id, child);
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function saveData() {
+        localStorage.setItem('organogramaData', JSON.stringify(treeData));
+        const toast = document.getElementById('save-toast');
+        toast.classList.add('show');
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => toast.classList.remove('show'), 2000);
+        render();
+    }
+    
+    function usarPadrao() { treeData = dadosPadrao; saveData(); }
+
+    function exportarDados() {
+        if (!treeData) return alert("Não há dados.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(treeData));
+        const a = document.createElement('a');
+        a.href = dataStr; a.download = "meu_organograma_backup.json";
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function importarDados(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                if (!json.nome && !json.id) throw new Error("Estrutura inválida.");
+                if (confirm("Isto substituirá o organograma atual. Continuar?")) {
+                    treeData = json; saveData(); alert("Restaurado com sucesso!");
+                }
+            } catch (err) { alert("Erro ao restaurar: " + err.message); } 
+            finally { input.value = ''; }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- MODAL ---
+    function abrirModal(event, id, editing) {
+        if (event) event.stopPropagation(); // Impede toggle ao clicar em editar
+        currentNodeId = id; isEditing = editing;
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modal-title');
+        document.getElementById('node-form').reset();
+
+        if (isEditing && id) {
+            const node = findNode(id);
+            if (node) {
+                title.innerText = "Editar Pessoa";
+                document.getElementById('input-nome').value = node.nome;
+                document.getElementById('input-cargo').value = node.cargo;
+                document.getElementById('input-foto').value = node.foto || '';
+                document.getElementById('input-cor').value = node.cor;
+            }
+        } else {
+            title.innerText = id ? "Adicionar Subordinado" : "Criar CEO / Diretor";
+        }
+        modal.style.display = 'flex';
+    }
+
+    function fecharModal() { document.getElementById('modal').style.display = 'none'; }
+
+    document.getElementById('node-form').onsubmit = function(e) {
+        e.preventDefault();
+        const nome = document.getElementById('input-nome').value;
+        const cargo = document.getElementById('input-cargo').value;
+        const foto = document.getElementById('input-foto').value;
+        const cor = document.getElementById('input-cor').value;
+
+        if (isEditing) {
+            const node = findNode(currentNodeId);
+            if (node) { node.nome = nome; node.cargo = cargo; node.foto = foto; node.cor = cor; }
+        } else {
+            const newNode = { id: generateId(), nome: nome, cargo: cargo, foto: foto, cor: cor, children: [], collapsed: false };
+            if (!treeData) treeData = newNode;
+            else {
+                const node = findNode(currentNodeId || treeData.id);
+                if (node) { 
+                    node.children.push(newNode); 
+                    node.collapsed = false; // Abre automaticamente ao adicionar filho
+                }
+            }
+        }
+        saveData(); fecharModal();
+    };
+
+    function removerNo(event, id) {
+        if (event) event.stopPropagation();
+        if (!treeData) return;
+        if (String(treeData.id) === String(id)) {
+            if (confirm("Apagar TUDO?")) { treeData = null; saveData(); } return;
+        }
+        if (!confirm("Remover esta pessoa e equipa?")) return;
+        const parent = findParent(id);
+        if (parent) {
+            parent.children = parent.children.filter(child => String(child.id) !== String(id));
+            saveData();
+        }
+    }
+
+    function resetarTudo() { if (confirm("Apagar tudo?")) { treeData = null; saveData(); } }
+
+    // Scroll Dragging
+    const container = document.getElementById('org-container');
+    let isDown = false; let startX, startY; let scrollLeft, scrollTop;
+    container.addEventListener('mousedown', (e) => {
+        // Se clicar num botão de ação, não inicia drag
+        if (e.target.closest('.action-btn')) return;
+        isDown = true; startX = e.pageX - container.offsetLeft; startY = e.pageY - container.offsetTop;
+        scrollLeft = container.scrollLeft; scrollTop = container.scrollTop;
+        container.style.cursor = 'grabbing';
+    });
+    container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; });
+    container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; });
+    container.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - container.offsetLeft; const y = e.pageY - container.offsetTop;
+        container.scrollLeft = scrollLeft - (x - startX); container.scrollTop = scrollTop - (y - startY);
+    });
+
+    render();
+
+</script>
+</body>
+</html>
