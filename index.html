@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organograma Bloomy</title>
+    <title>Organograma da Empresa</title>
     <!-- Fonte e Ícones -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -198,6 +198,19 @@
             padding: 0; 
             cursor: pointer; /* Indica clicável */
             white-space: normal; /* Permite que o texto dentro do card quebre linha */
+        }
+        
+        /* Estilo visual quando arrastando */
+        .card.dragging {
+            opacity: 0.5;
+            border: 2px dashed #3b82f6;
+        }
+
+        /* Estilo visual para área de drop válida */
+        .card.drag-over {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border: 2px solid #3b82f6;
         }
         
         .card:hover { transform: translateY(-3px); }
@@ -598,6 +611,9 @@
     let isEditing = false;
     let saveTimeout;
     let currentScale = 1;
+    
+    // Variáveis para Drag and Drop
+    let draggedNodeId = null;
 
     // --- HELPERS ---
     function formatarUrlImagem(url) {
@@ -693,9 +709,19 @@
 
         let html = `<li class="${corLinha}">`;
         
-        // Adicionamos onclick no card inteiro para fazer o toggle
+        // Adicionamos atributos para Drag and Drop
+        // draggable="true" apenas se NÃO for o root
+        const draggableAttr = !isRoot ? 'draggable="true"' : '';
+        
         html += `
-            <div class="card ${node.cor}" onclick="alternarExibicao(event, '${node.id}')">
+            <div class="card ${node.cor}" 
+                 onclick="alternarExibicao(event, '${node.id}')"
+                 ${draggableAttr}
+                 ondragstart="dragStart(event, '${node.id}')"
+                 ondragover="dragOver(event)"
+                 ondragleave="dragLeave(event)"
+                 ondrop="drop(event, '${node.id}')">
+                 
                 <div class="card-photo">
                     <div class="card-actions">
                         <button class="action-btn btn-add" title="Adicionar" onclick="abrirModal(event, '${node.id}', false)"><i class="fa-solid fa-plus"></i></button>
@@ -727,6 +753,114 @@
 
         html += '</li>';
         return html;
+    }
+
+    // --- FUNÇÕES DE DRAG AND DROP ---
+
+    function dragStart(event, id) {
+        event.stopPropagation();
+        draggedNodeId = id;
+        event.dataTransfer.effectAllowed = 'move';
+        // Adiciona classe visual
+        event.target.closest('.card').classList.add('dragging');
+    }
+
+    function dragOver(event) {
+        event.preventDefault(); // Necessário para permitir o drop
+        event.dataTransfer.dropEffect = 'move';
+        
+        // Adiciona feedback visual no alvo
+        const card = event.target.closest('.card');
+        if (card && !card.classList.contains('dragging')) {
+            card.classList.add('drag-over');
+        }
+    }
+
+    function dragLeave(event) {
+        const card = event.target.closest('.card');
+        if (card) {
+            card.classList.remove('drag-over');
+        }
+    }
+
+    function drop(event, targetId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const card = event.target.closest('.card');
+        if (card) {
+            card.classList.remove('drag-over');
+            const draggedCard = document.querySelector('.card.dragging');
+            if(draggedCard) draggedCard.classList.remove('dragging');
+        }
+
+        if (!draggedNodeId || draggedNodeId === targetId) return;
+
+        // Lógica de Movimentação ou Reordenação
+        moverOuReordenarNo(draggedNodeId, targetId);
+        
+        // Reset
+        draggedNodeId = null;
+    }
+
+    function moverOuReordenarNo(idParaMover, idAlvo) {
+        // Encontrar os nós
+        const noMovido = findNode(idParaMover);
+        const paiAtual = findParent(idParaMover);
+        const noAlvo = findNode(idAlvo);
+        const paiAlvo = findParent(idAlvo);
+
+        if (!noMovido || !paiAtual || !noAlvo) {
+            console.error("Erro ao encontrar nós");
+            return;
+        }
+
+        // Caso 1: Reordenação (Mesmo pai)
+        // Se o alvo é irmão do nó movido (tem o mesmo pai), trocamos a ordem
+        if (paiAtual.id === paiAlvo?.id) {
+            const indexMovido = paiAtual.children.findIndex(c => c.id === idParaMover);
+            const indexAlvo = paiAtual.children.findIndex(c => c.id === idAlvo);
+            
+            if (indexMovido > -1 && indexAlvo > -1) {
+                // Remove o item da posição antiga
+                paiAtual.children.splice(indexMovido, 1);
+                // Insere na nova posição (antes do alvo)
+                paiAtual.children.splice(indexAlvo, 0, noMovido);
+                saveData();
+                return;
+            }
+        }
+
+        // Caso 2: Mover para outro chefe (Hierarquia)
+        // Verifica ciclos
+        if (verificarDescendencia(idParaMover, idAlvo)) {
+            alert("Não é possível mover um chefe para dentro da sua própria equipe.");
+            return;
+        }
+
+        // Remove do pai antigo
+        paiAtual.children = paiAtual.children.filter(child => String(child.id) !== String(idParaMover));
+        
+        // Adiciona ao novo pai (no final da lista)
+        if (!noAlvo.children) noAlvo.children = [];
+        noAlvo.children.push(noMovido);
+        noAlvo.collapsed = false;
+
+        saveData();
+    }
+
+    // Verifica se o 'supostoFilho' é na verdade um descendente do 'supostoPai' (evita loops)
+    function verificarDescendencia(idSupostoPai, idSupostoFilho) {
+        if (String(idSupostoPai) === String(idSupostoFilho)) return true;
+        
+        const pai = findNode(idSupostoPai);
+        if (!pai || !pai.children) return false;
+
+        // Busca recursiva nos filhos do suposto pai para ver se encontra o alvo
+        for (let filho of pai.children) {
+            if (verificarDescendencia(filho.id, idSupostoFilho)) return true; // Se encontrou recursivamente
+        }
+        return false;
     }
 
     // --- LÓGICA DE DADOS ---
@@ -858,9 +992,11 @@
     // Scroll Dragging
     const container = document.getElementById('org-container');
     let isDown = false; let startX, startY; let scrollLeft, scrollTop;
+    
     container.addEventListener('mousedown', (e) => {
-        // Se clicar num botão de ação, não inicia drag
-        if (e.target.closest('.action-btn')) return;
+        // Se clicar num botão de ação OU num card (para drag n drop), não inicia scroll drag
+        if (e.target.closest('.action-btn') || e.target.closest('.card')) return;
+        
         isDown = true; startX = e.pageX - container.offsetLeft; startY = e.pageY - container.offsetTop;
         scrollLeft = container.scrollLeft; scrollTop = container.scrollTop;
         container.style.cursor = 'grabbing';
